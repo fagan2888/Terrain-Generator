@@ -14,10 +14,6 @@ def plot_gradient(V, loc):
     plt.savefig(loc + "-ddy.png")
 
 def plot(data, file=None):
-    for y in range(data.shape[1]):
-        for x in range(data.shape[0]):
-            print (data[x][y], end="\t")
-        print()
     fig = plt.imshow(data.T, interpolation='none')
     fig.set_cmap('terrain')
     plt.axis('off')

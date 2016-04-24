@@ -7,16 +7,13 @@ def erode(mapp, rain, steps):
     size = mapp.width
     R = [np.array([
                     randint(0, size-1), randint(0, size-1)
-                ]) 
+                ])
              for _ in range(rain)]
     V = [np.zeros(2) for _ in range(rain)]
     S = [0 for _ in range(rain)]
     trails = [[] for _ in range(rain)]
     finished = []
-    counter = 0
     for count in range(steps):
-        if count % 10 == 0:
-            print("%6.2f%%"%(count/steps * 100))
         R2 = []
         V2 = []
         S2 = []
@@ -32,7 +29,6 @@ def erode(mapp, rain, steps):
             trail = trails[i]
             trail.append(r)
             s = S[i] + k_tough * (k_cap * np.linalg.norm(V[i]) - S[i])
-            counter += 1
             mapp[R[i]] -= s - S[i]
             R2.append(r)
             V2.append(v)
