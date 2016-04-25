@@ -14,7 +14,7 @@ debug = Map.of(size)
 set_up_landscape(debug, 1, skip_levels)
 
 debug.blur(2)
-plot(debug.data, file="debug-before.png")
+plot(debug.E, file="debug-before.png")
 trs = []
 
 start = time()
@@ -28,7 +28,7 @@ end = time()
 
 print("Took %6.2fs" % (end - start))
 
-plot(debug.data, file="debug-after.png")
+plot(debug.E, file="debug-after.png")
 
 for tr in trs:
     u, v = [(x[0]) for x in tr], [(y[1]) for y in tr]

@@ -7,7 +7,7 @@ from scipy.ndimage.filters import gaussian_filter
 
 class Map:
     def __init__(self, zvals, x0, y0, w, h):
-        self._zvals = zvals
+        self.__E = zvals
         self._x0 = x0
         self._y0 = y0
         self._w = w
@@ -19,25 +19,25 @@ class Map:
         return m
 
     def recalculate_bounds(self):
-        M = np.max(self.data)
-        m = np.min(self.data)
+        M = np.max(self.E)
+        m = np.min(self.E)
         self.__thresh = m + (M - m) * k_ocean
 
     @property
-    def data(self):
-        return self._zvals
+    def E(self):
+        return self.__E
 
     def __quadrant(self, xoff, yoff):
-        return Map(self._zvals, self._x0 + xoff, self._y0 + yoff, self._w / 2, self._h / 2)
+        return Map(self.__E, self._x0 + xoff, self._y0 + yoff, self._w / 2, self._h / 2)
 
     def __offset(self, xoff, yoff):
-        return Map(self._zvals, self._x0 + xoff, self._y0 + yoff, self._w, self._h)
+        return Map(self.__E, self._x0 + xoff, self._y0 + yoff, self._w, self._h)
 
     def offset_z(self, zoff):
-        self._zvals[self._x0 : self._x0+self._w, self._y0 : self._y0+self._h] += zoff
+        self.__E[self._x0 : self._x0+self._w, self._y0 : self._y0+self._h] += zoff
 
     def blur(self, sigma):
-        self._zvals = gaussian_filter(self._zvals,sigma)
+        self.__E = gaussian_filter(self.__E,sigma)
         self.recalculate_bounds()
 
     @property
@@ -49,8 +49,8 @@ class Map:
             dy = y * self._h
             nx = self._x0 + dx
             ny = self._y0 + dy
-            if 0 <= nx and nx + self._w <= self._zvals.shape[0]:
-                if 0 <= ny and ny + self._h <= self._zvals.shape[1]:
+            if 0 <= nx and nx + self._w <= self.__E.shape[0]:
+                if 0 <= ny and ny + self._h <= self.__E.shape[1]:
                     neigh.append(self.__offset(dx, dy))
         return neigh
 
@@ -104,10 +104,10 @@ class Map:
 
     def __getitem__(self, item):
         item = self.__check_bounds(item)
-        return self._zvals[item[0] + self._x0][item[1] + self._y0]
+        return self.__E[item[0] + self._x0][item[1] + self._y0]
     def __setitem__(self, item, val):
         item = self.__check_bounds(item)
-        self._zvals[item[0] + self._x0][item[1] + self._y0] = val
+        self.__E[item[0] + self._x0][item[1] + self._y0] = val
 
     def in_ocean(self, r):
         val = self[r]

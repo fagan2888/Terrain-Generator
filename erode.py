@@ -13,14 +13,13 @@ def erode(mapp, rain, steps):
     S = [0 for _ in range(rain)]
     trails = [[] for _ in range(rain)]
     finished = []
-    E = mapp.data
     for count in range(steps):
         R2 = []
         V2 = []
         S2 = []
         trails2 = []
         for i in range(len(R)):
-            a = -k_steep * gradAt(E, round(R[i][0]), round(R[i][1]))
+            a = -k_steep * gradAt(mapp.E, round(R[i][0]), round(R[i][1]))
             v = a
             r = (v + V[i]) / 2 + R[i]
             end = round(r[0]) < 0 or round(r[0]) >= size or round(r[1]) < 0 or round(r[1]) >= size
