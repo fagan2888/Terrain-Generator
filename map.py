@@ -12,27 +12,33 @@ class Map:
         self._y0 = y0
         self._w = w
         self._h = h
+        self.recalculate_bounds()
     def of(size):
         zvals = np.zeros((size,size))
         m = Map(zvals, 0, 0, size, size)
         return m
-    
+
+    def recalculate_bounds(self):
+        self.__max = np.max(self.data)
+        self.__min = np.min(self.data)
+
     @property
     def data(self):
         return self._zvals
-    
+
     def __quadrant(self, xoff, yoff):
         return Map(self._zvals, self._x0 + xoff, self._y0 + yoff, self._w / 2, self._h / 2)
-    
+
     def __offset(self, xoff, yoff):
         return Map(self._zvals, self._x0 + xoff, self._y0 + yoff, self._w, self._h)
-    
+
     def offset_z(self, zoff):
         self._zvals[self._x0 : self._x0+self._w, self._y0 : self._y0+self._h] += zoff
-    
+
     def blur(self, sigma):
         self._zvals = gaussian_filter(self._zvals,sigma)
-    
+        self.recalculate_bounds()
+
     @property
     def neighbors(self):
         offs = [(0,1), (0,-1), (1,0), (-1,0)]
@@ -50,11 +56,11 @@ class Map:
     @property
     def xvals(self):
         return range(floor(self._w))
-    
+
     @property
     def yvals(self):
         return np.arange(floor(self._h))
-    
+
     @property
     def ul(self):
         return self.__quadrant(0, 0)
@@ -71,14 +77,14 @@ class Map:
     @property
     def center(self):
         return self[self._w / 2, self._h / 2]
-    
+
     @property
     def smaller_than_pixel(self):
         return self._w < 1 and self._h < 1
-    
+
     def __str__(self):
         return "Map %s\t%s\t%s\t%s" % (self._x0, self._y0, self._w, self._h)
-    
+
     def __check_bounds(self, item):
         item = list(item)
         if len(item) != 2:
@@ -87,15 +93,15 @@ class Map:
         if not (0 <= item[0] < self._w) and not (0 <= item[1] < self._h):
             raise AssertionError(str(item) + " is out of bounds")
         return item
-    
+
     @property
     def width(self):
         return self._w
-    
+
     @property
     def height(self):
         return self._h
-    
+
     def __getitem__(self, item):
         item = self.__check_bounds(item)
         return self._zvals[round(item[0] + self._x0)][round(item[1] + self._y0)]
@@ -104,10 +110,8 @@ class Map:
         self._zvals[round(item[0] + self._x0)][round(item[1] + self._y0)] = val
 
     def in_ocean(self, r):
-        m = np.min(self.data)
-        M = np.max(self.data)
         val = self[r]
-        prop = (val - m) / (M - m)
+        prop = (val - self.__min) / (self.__max - self.__min)
         return prop < k_ocean
 
 def set_up_landscape(mapp, amount, levels):
@@ -117,3 +121,4 @@ def set_up_landscape(mapp, amount, levels):
         mapp.offset_z(random() * amount)
     for sub in [mapp.ul, mapp.ur, mapp.ll, mapp.lr]:
         set_up_landscape(sub, amount / FACTOR, levels-1)
+    mapp.recalculate_bounds()
