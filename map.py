@@ -87,10 +87,9 @@ class Map:
         return "Map %s\t%s\t%s\t%s" % (self._x0, self._y0, self._w, self._h)
 
     def __check_bounds(self, item):
-        item = list(item)
         if len(item) != 2:
             raise AssertionError(str(item) + "does not have 2 elements!")
-        item[0], item[1] = round(item[0]), round(item[1])
+        item = round(item[0]), round(item[1])
         if not (0 <= item[0] < self._w) and not (0 <= item[1] < self._h):
             raise AssertionError(str(item) + " is out of bounds")
         return item
