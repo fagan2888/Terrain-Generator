@@ -19,8 +19,9 @@ class Map:
         return m
 
     def recalculate_bounds(self):
-        self.__max = np.max(self.data)
-        self.__min = np.min(self.data)
+        M = np.max(self.data)
+        m = np.min(self.data)
+        self.__thresh = m + (M - m) * k_ocean
 
     @property
     def data(self):
@@ -111,8 +112,7 @@ class Map:
 
     def in_ocean(self, r):
         val = self[r]
-        prop = (val - self.__min) / (self.__max - self.__min)
-        return prop < k_ocean
+        return val < self.__thresh
 
 def set_up_landscape(mapp, amount, levels):
     if mapp.smaller_than_pixel:
