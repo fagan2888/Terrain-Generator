@@ -104,10 +104,10 @@ class Map:
 
     def __getitem__(self, item):
         item = self.__check_bounds(item)
-        return self._zvals[round(item[0] + self._x0)][round(item[1] + self._y0)]
+        return self._zvals[item[0] + self._x0][item[1] + self._y0]
     def __setitem__(self, item, val):
         item = self.__check_bounds(item)
-        self._zvals[round(item[0] + self._x0)][round(item[1] + self._y0)] = val
+        self._zvals[item[0] + self._x0][item[1] + self._y0] = val
 
     def in_ocean(self, r):
         val = self[r]
