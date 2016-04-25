@@ -116,8 +116,8 @@ class Map:
 def set_up_landscape(mapp, amount, levels):
     if mapp.smaller_than_pixel:
         return
-    if levels < 0:
+    if levels <= 0:
         mapp.offset_z(random() * amount)
     for sub in [mapp.ul, mapp.ur, mapp.ll, mapp.lr]:
-        set_up_landscape(sub, amount / FACTOR, levels-1)
+        set_up_landscape(sub, amount / mountain_factor, levels-1)
     mapp.recalculate_bounds()
