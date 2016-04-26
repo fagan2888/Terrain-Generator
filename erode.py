@@ -21,7 +21,7 @@ def erode(mapp, rain, steps):
         for i in range(len(R)):
             a = -k_steep * gradAt(mapp.E, round(R[i][0]), round(R[i][1]))
             v = a
-            r = (v + V[i]) / 2 + R[i]
+            r = v + R[i]
             end = round(r[0]) < 0 or round(r[0]) >= size or round(r[1]) < 0 or round(r[1]) >= size
             if not end:
                 end = mapp.in_ocean(r)
