@@ -6,39 +6,44 @@ from math import floor
 from scipy.ndimage.filters import gaussian_filter
 
 class Map:
-    def __init__(self, zvals, x0, y0, w, h):
-        self.__E = zvals
+    def __init__(self, E, W, x0, y0, w, h):
+        self.__E = E
+        self.__W = W
         self._x0 = x0
         self._y0 = y0
         self._w = w
         self._h = h
-        self.recalculate_bounds()
     def of(size):
-        zvals = np.zeros((size,size))
-        m = Map(zvals, 0, 0, size, size)
+        E = np.zeros((size,size))
+        W = np.zeros((size,size))
+        m = Map(E, W, 0, 0, size, size)
         return m
-
-    def recalculate_bounds(self):
-        M = np.max(self.E)
-        m = np.min(self.E)
-        self.__thresh = m + (M - m) * k_ocean
 
     @property
     def E(self):
         return self.__E
+    @property
+    def W(self):
+        return self.__W
 
     def __quadrant(self, xoff, yoff):
-        return Map(self.__E, self._x0 + xoff, self._y0 + yoff, self._w / 2, self._h / 2)
+        return Map(self.__E, self.__W, self._x0 + xoff, self._y0 + yoff, self._w / 2, self._h / 2)
 
     def __offset(self, xoff, yoff):
-        return Map(self.__E, self._x0 + xoff, self._y0 + yoff, self._w, self._h)
+        return Map(self.__E, self.__W, self._x0 + xoff, self._y0 + yoff, self._w, self._h)
 
     def offset_z(self, zoff):
         self.__E[self._x0 : self._x0+self._w, self._y0 : self._y0+self._h] += zoff
 
     def blur(self, sigma):
         self.__E = gaussian_filter(self.__E,sigma)
-        self.recalculate_bounds()
+        self.flood()
+
+    def flood(self):
+        M = np.max(self.E)
+        m = np.min(self.E)
+        thresh = m + (M - m) * k_ocean
+        self.__W.fill(thresh)
 
     @property
     def neighbors(self):
@@ -87,12 +92,22 @@ class Map:
         return "Map %s\t%s\t%s\t%s" % (self._x0, self._y0, self._w, self._h)
 
     def __check_bounds(self, item):
-        if len(item) != 2:
+        if len(item) == 2:
+            matrix = self.__E
+        elif len(item) == 3:
+            if item[2] == "water":
+                matrix = self.__W
+            elif item[2] == "land":
+                matrix = self.__E
+            else:
+                raise AssertionError("{}'s last element should be either 'water' or 'land'".format(item))
+            matrix = self.__W if item[2] == 'water' else self.__E
+        else:
             raise AssertionError(str(item) + "does not have 2 elements!")
         item = round(item[0]), round(item[1])
         if not (0 <= item[0] < self._w) and not (0 <= item[1] < self._h):
             raise AssertionError(str(item) + " is out of bounds")
-        return item
+        return item, matrix
 
     @property
     def width(self):
@@ -103,21 +118,23 @@ class Map:
         return self._h
 
     def __getitem__(self, item):
-        item = self.__check_bounds(item)
-        return self.__E[item[0] + self._x0][item[1] + self._y0]
+        item, matrix = self.__check_bounds(item)
+        return matrix[item[0] + self._x0][item[1] + self._y0]
     def __setitem__(self, item, val):
-        item = self.__check_bounds(item)
-        self.__E[item[0] + self._x0][item[1] + self._y0] = val
+        item, matrix = self.__check_bounds(item)
+        matrix[item[0] + self._x0][item[1] + self._y0] = val
 
     def in_ocean(self, r):
-        val = self[r]
-        return val < self.__thresh
+        x, y = r
+        return self[x,y,'land'] < self[x,y,'water']
 
 def set_up_landscape(mapp, amount, levels):
-    if mapp.smaller_than_pixel:
-        return
-    if levels <= 0:
-        mapp.offset_z(random() * amount)
-    for sub in [mapp.ul, mapp.ur, mapp.ll, mapp.lr]:
-        set_up_landscape(sub, amount / mountain_factor, levels-1)
-    mapp.recalculate_bounds()
+    def setup(mapp, amount, levels):
+        if mapp.smaller_than_pixel:
+            return
+        if levels <= 0:
+            mapp.offset_z(random() * amount)
+        for sub in [mapp.ul, mapp.ur, mapp.ll, mapp.lr]:
+            setup(sub, amount / mountain_factor, levels-1)
+    setup(mapp, amount, levels)
+    mapp.flood()
