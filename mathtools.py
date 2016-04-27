@@ -27,3 +27,15 @@ def generate(size, f):
         for y in range(size):
             A[x][y] = f(x, y)
     return A
+
+def is_min(V, x, y):
+    size = V.shape[0]
+    if x < size - 1 and V[x][y] >= V[x + 1][y]:
+        return False
+    if x > 0 and V[x][y] >= V[x - 1][y]:
+        return False
+    if y < size - 1 and V[x][y] >= V[x][y+1]:
+        return False
+    if y > 0 and V[x][y] >= V[x][y-1]:
+        return False
+    return True

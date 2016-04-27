@@ -3,6 +3,8 @@ import numpy as np
 from random import random
 from math import floor
 
+from mathtools import is_min
+
 from scipy.ndimage.filters import gaussian_filter
 
 class Map:
@@ -127,6 +129,9 @@ class Map:
     def in_ocean(self, r):
         x, y = r
         return self[x,y,'land'] < self[x,y,'water']
+
+    def at_min(self, r):
+        return is_min(self.E, r[0], r[1])
 
 def set_up_landscape(mapp, amount, levels):
     def setup(mapp, amount, levels):

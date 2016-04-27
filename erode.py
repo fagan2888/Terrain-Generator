@@ -10,11 +10,34 @@ class Raindrop:
         self.__s = s
         self.__trail = trail
 
-    def step(self):
-        pass
+    def step(self, mapp):
+        v = -k_steep * gradAt(mapp.E, round(self.__x), round(self.__y))
+        r = self.r + v
+        self.__x = r[0]
+        self.__y = r[1]
+        end = self.is_at_end(mapp)
+        return v, r, end
+
+    def is_at_end(self, mapp):
+        size = mapp.width
+        if round(self.__x) < 0:
+            return True
+        if round(self.__x) >= size:
+            return True
+        if round(self.__y) < 0:
+            return True
+        if round(self.__y) >= size:
+            return True
+        if mapp.in_ocean(self.r):
+            return True
+        if mapp.at_min(self.r):
+            return True
+        return False
 
     def update(self, r, s):
-        return Raindrop(r[0], r[1], s, self.__trail)
+        self.__x = r[0]
+        self.__y = r[1]
+        self.__s = s
 
     def gen_raindrop(board_size):
         return Raindrop(randint(0, board_size-1), randint(0, board_size-1), 0, [])
@@ -50,11 +73,7 @@ def erode(mapp, rain, steps):
     for count in range(steps):
         rains2 = []
         for i in range(len(rains)):
-            v = -k_steep * gradAt(mapp.E, round(rains[i].x), round(rains[i].y))
-            r = v + rains[i].r
-            end = round(r[0]) < 0 or round(r[0]) >= size or round(r[1]) < 0 or round(r[1]) >= size
-            if not end:
-                end = mapp.in_ocean(r)
+            v, r, end = rains[i].step(mapp)
             if end:
                 rains[i].finish(finished)
                 continue
@@ -62,6 +81,7 @@ def erode(mapp, rain, steps):
             s = rains[i].s + ds
             mapp[rains[i].r] -= ds
             rains[i].track(r)
-            rains2.append(rains[i].update(r, s))
+            rains[i].update(r, s)
+            rains2.append(rains[i])
         rains = rains2
     return Raindrop.alltrails(rains) + finished
