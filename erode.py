@@ -13,15 +13,15 @@ class Raindrop:
     def step(self, mapp):
         v = -k_steep * gradAt(mapp.E, round(self.__x), round(self.__y))
         r = self.r + v
-        ds = k_tough * (k_cap * np.linalg.norm(v) - self.s)
-        s = self.s + ds
+        ds = k_tough * (k_cap * np.linalg.norm(v) - self.__s)
+        s = self.__s + ds
         mapp[self.r] -= ds
-        self.track(r)
-        self.update(r, s)
-        end = self.is_at_end(mapp)
+        self.__track(r)
+        self.__update(r, s)
+        end = self.__is_at_end(mapp)
         return end
 
-    def is_at_end(self, mapp):
+    def __is_at_end(self, mapp):
         size = mapp.width
         if round(self.__x) < 0:
             return True
@@ -37,31 +37,22 @@ class Raindrop:
             return True
         return False
 
-    def update(self, r, s):
+    def __update(self, r, s):
         self.__x = r[0]
         self.__y = r[1]
         self.__s = s
 
-    def gen_raindrop(board_size):
+    def __gen_raindrop(board_size):
         return Raindrop(randint(0, board_size-1), randint(0, board_size-1), 0, [])
 
     def gen_raindrops(quantity_rain, board_size):
-        return [Raindrop.gen_raindrop(board_size) for _ in range(quantity_rain)]
+        return [Raindrop.__gen_raindrop(board_size) for _ in range(quantity_rain)]
 
-    @property
-    def x(self):
-        return self.__x
-    @property
-    def y(self):
-        return self.__y
     @property
     def r(self):
-        return np.array([self.x, self.y])
-    @property
-    def s(self):
-        return self.__s
+        return np.array([self.__x, self.__y])
 
-    def track(self, loc):
+    def __track(self, loc):
         self.__trail.append(loc)
     def finish(self, finished):
         finished.append(self.__trail)
