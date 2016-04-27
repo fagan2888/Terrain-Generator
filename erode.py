@@ -13,10 +13,13 @@ class Raindrop:
     def step(self, mapp):
         v = -k_steep * gradAt(mapp.E, round(self.__x), round(self.__y))
         r = self.r + v
-        self.__x = r[0]
-        self.__y = r[1]
+        ds = k_tough * (k_cap * np.linalg.norm(v) - self.s)
+        s = self.s + ds
+        mapp[self.r] -= ds
+        self.track(r)
+        self.update(r, s)
         end = self.is_at_end(mapp)
-        return v, r, end
+        return end
 
     def is_at_end(self, mapp):
         size = mapp.width
@@ -72,16 +75,12 @@ def erode(mapp, rain, steps):
     finished = []
     for count in range(steps):
         rains2 = []
-        for i in range(len(rains)):
-            v, r, end = rains[i].step(mapp)
-            if end:
-                rains[i].finish(finished)
-                continue
-            ds = k_tough * (k_cap * np.linalg.norm(v) - rains[i].s)
-            s = rains[i].s + ds
-            mapp[rains[i].r] -= ds
-            rains[i].track(r)
-            rains[i].update(r, s)
-            rains2.append(rains[i])
+        for rain in rains:
+            ended = rain.step(mapp)
+            if ended:
+                rain.finish(finished)
+            else:
+                rains2.append(rain)
+
         rains = rains2
     return Raindrop.alltrails(rains) + finished
