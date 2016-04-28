@@ -15,8 +15,6 @@ class Map:
         self._y0 = y0
         self._w = w
         self._h = h
-        self.__range = 0
-        self.__oceans = Oceans()
     def of(size):
         E = np.zeros((size,size))
         W = np.zeros((size,size))
@@ -46,10 +44,8 @@ class Map:
     def flood(self):
         M = np.max(self.E)
         m = np.min(self.E)
-        self.__range = M - m
-        thresh = m + self.__range * k_ocean
+        thresh = m + (M - m) * k_ocean
         self.__W.fill(thresh)
-        self.__populate_oceans()
 
     @property
     def neighbors(self):
@@ -136,31 +132,6 @@ class Map:
 
     def at_min(self, r):
         return is_min(self.E, r[0], r[1])
-
-    def add_droplet(self, r):
-        u = self.ocean_at(r)
-        if len(u) == 0:
-            u = self.create_ocean(r)
-        h_add = q_droplet * self.__range
-        h_new = h_add + self[r[0],r[1],'water']
-        dropspots = []
-        for x, y in u:
-            for r2 in self.__neighbors_of((x,y)):
-                if r2 not in u:
-                    if self[r2] < self[x,y]:
-                        dropspots.append(r2)
-                        h_new -= q_droplet * self.__range
-                        continue
-                    h_adj = h_new * len(u) / (len(u) + 1)
-                    if self[r2] < h_adj:
-                        self.create_ocean(r2)
-                        u.add(r2)
-                        h_new = h_adj
-                        continue
-        for x, y in u:
-            self[r[0],r[1],'water'] = h_new
-        return dropspots
-
 
 def set_up_landscape(mapp, amount, levels):
     def setup(mapp, amount, levels):

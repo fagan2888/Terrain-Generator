@@ -4,10 +4,6 @@ from random import randint
 from mathtools import gradAt
 
 class Raindrop:
-    class notover:
-        pass
-    notover = notover()
-
     def __init__(self, x, y, s, trail):
         self.__x = x
         self.__y = y
@@ -23,9 +19,7 @@ class Raindrop:
         self.__track(r)
         self.__update(r, s)
         end = self.__is_at_end(mapp)
-        if end:
-            return mapp.add_droplet(self.r)
-        return Raindrop.notover
+        return end
 
     def __is_at_end(self, mapp):
         size = mapp.width
@@ -74,11 +68,10 @@ def erode(mapp, rain, steps):
         rains2 = []
         for rain in rains:
             ended = rain.step(mapp)
-            if ended is Raindrop.notover:
-                rains2.append(rain)
-            else:
+            if ended:
                 rain.finish(finished)
-                rains += ended
+            else:
+                rains2.append(rain)
 
         rains = rains2
     return Raindrop.alltrails(rains) + finished
