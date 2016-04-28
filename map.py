@@ -3,14 +3,15 @@ import numpy as np
 from random import random
 from math import floor
 
-from mathtools import is_min
+from oceans import Oceans
+
+from mathtools import is_min, neighbors
 
 from scipy.ndimage.filters import gaussian_filter
 
 class Map:
-    def __init__(self, E, W, x0, y0, w, h):
+    def __init__(self, E, x0, y0, w, h):
         self.__E = E
-        self.__W = W
         self._x0 = x0
         self._y0 = y0
         self._w = w
@@ -19,22 +20,18 @@ class Map:
         self.__oceans = Oceans()
     def of(size):
         E = np.zeros((size,size))
-        W = np.zeros((size,size))
-        m = Map(E, W, 0, 0, size, size)
+        m = Map(E, 0, 0, size, size)
         return m
 
     @property
     def E(self):
         return self.__E
-    @property
-    def W(self):
-        return self.__W
 
     def __quadrant(self, xoff, yoff):
-        return Map(self.__E, self.__W, self._x0 + xoff, self._y0 + yoff, self._w / 2, self._h / 2)
+        return Map(self.__E, self._x0 + xoff, self._y0 + yoff, self._w / 2, self._h / 2)
 
     def __offset(self, xoff, yoff):
-        return Map(self.__E, self.__W, self._x0 + xoff, self._y0 + yoff, self._w, self._h)
+        return Map(self.__E, self._x0 + xoff, self._y0 + yoff, self._w, self._h)
 
     def offset_z(self, zoff):
         self.__E[self._x0 : self._x0+self._w, self._y0 : self._y0+self._h] += zoff
@@ -48,12 +45,14 @@ class Map:
         m = np.min(self.E)
         self.__range = M - m
         thresh = m + self.__range * k_ocean
-        self.__W.fill(thresh)
-        self.__populate_oceans()
+        for x in self.xvals:
+            for y in self.yvals:
+                if self.E[x,y] < thresh:
+                    self.__oceans.add((x,y))
 
     @property
     def neighbors(self):
-        offs = [(0,1), (0,-1), (1,0), (-1,0)]
+        offs = neighbors((0,0))
         neigh = []
         for x, y in offs:
             dx = x * self._w
@@ -98,22 +97,12 @@ class Map:
         return "Map %s\t%s\t%s\t%s" % (self._x0, self._y0, self._w, self._h)
 
     def __check_bounds(self, item):
-        if len(item) == 2:
-            matrix = self.__E
-        elif len(item) == 3:
-            if item[2] == "water":
-                matrix = self.__W
-            elif item[2] == "land":
-                matrix = self.__E
-            else:
-                raise AssertionError("{}'s last element should be either 'water' or 'land'".format(item))
-            matrix = self.__W if item[2] == 'water' else self.__E
-        else:
+        if len(item) != 2:
             raise AssertionError(str(item) + "does not have 2 elements!")
         item = round(item[0]), round(item[1])
         if not (0 <= item[0] < self._w) and not (0 <= item[1] < self._h):
             raise AssertionError(str(item) + " is out of bounds")
-        return item, matrix
+        return item
 
     @property
     def width(self):
@@ -124,25 +113,24 @@ class Map:
         return self._h
 
     def __getitem__(self, item):
-        item, matrix = self.__check_bounds(item)
-        return matrix[item[0] + self._x0][item[1] + self._y0]
+        item = self.__check_bounds(item)
+        return self.__E[item[0] + self._x0][item[1] + self._y0]
     def __setitem__(self, item, val):
-        item, matrix = self.__check_bounds(item)
-        matrix[item[0] + self._x0][item[1] + self._y0] = val
+        item = self.__check_bounds(item)
+        self.__E[item[0] + self._x0][item[1] + self._y0] = val
 
     def in_ocean(self, r):
-        x, y = r
-        return self[x,y,'land'] < self[x,y,'water']
+        return self.__oceans.in_ocean(r)
 
     def at_min(self, r):
         return is_min(self.E, r[0], r[1])
 
     def add_droplet(self, r):
         u = self.ocean_at(r)
-        if len(u) == 0:
-            u = self.create_ocean(r)
+        if u.is_empty:
+            u = self.__oceans.new_ocean(r)
         h_add = q_droplet * self.__range
-        h_new = h_add + self[r[0],r[1],'water']
+        h_new = h_add + u.depth
         dropspots = []
         for x, y in u:
             for r2 in self.__neighbors_of((x,y)):
@@ -151,14 +139,13 @@ class Map:
                         dropspots.append(r2)
                         h_new -= q_droplet * self.__range
                         continue
-                    h_adj = h_new * len(u) / (len(u) + 1)
+                    h_adj = h_new * u.size / (u.size + 1)
                     if self[r2] < h_adj:
-                        self.create_ocean(r2)
+                        self.__oceans.new_ocean(r2)
                         u.add(r2)
                         h_new = h_adj
                         continue
-        for x, y in u:
-            self[r[0],r[1],'water'] = h_new
+        u.set_depth(h_new)
         return dropspots
 
 
