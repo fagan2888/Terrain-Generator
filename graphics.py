@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import numpy as np
+from mpl_toolkits.mplot3d.axes3d import Axes3D
 
 from mathtools import grad, generate
 
@@ -12,6 +14,29 @@ def plot_gradient(V, loc):
     plt.savefig(loc + "-ddx.png")
     fig = plt.imshow(gy, interpolation='none')
     plt.savefig(loc + "-ddy.png")
+
+def plot3d(data, file=None):
+    def squish_plot(amount):
+        low, high = ax.get_zlim()
+        diff = high - low
+        low -= diff * amount
+        high += diff * amount
+        ax.set_zlim(low, high)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_axis_off()
+    x = np.array(range(data.shape[0]))
+    x, y = np.meshgrid(x,x)
+
+    ax.plot_surface(x,y,data, cmap='terrain', rstride=1, cstride=1,linewidth=0)
+
+    squish_plot(2)
+    if file is not None:
+        plt.savefig(file)
+    else:
+        plt.show(block=False)
+
 
 def plot(data, file=None):
     fig = plt.imshow(data.T, interpolation='none')

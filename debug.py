@@ -5,11 +5,11 @@ from config import *
 from time import time
 import matplotlib.pyplot as plt
 from map import Map, set_up_landscape
-from graphics import plot, plot_gradient
+from graphics import plot, plot_gradient, plot3d
 
 scatter = False
 size = 128
-runs = 400
+runs = 1000
 debug = Map.of(size)
 set_up_landscape(debug, 1, skip_levels)
 
@@ -27,6 +27,11 @@ for count in range(runs):
 end = time()
 
 print("Took %6.2fs" % (end - start))
+
+plot3d(debug.E, file="debug-carved.png")
+
+plt.clf()
+plt.cla()
 
 plot(debug.E, file="debug-after.png")
 
