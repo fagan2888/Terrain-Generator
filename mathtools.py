@@ -39,7 +39,3 @@ def is_min(V, x, y):
     if y > 0 and V[x][y] >= V[x][y-1]:
         return False
     return True
-
-def neighbors(r):
-    x, y = r
-    return [(x+1,y),(x,y+1),(x-1,y),(x,y-1)]
