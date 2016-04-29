@@ -33,9 +33,11 @@ def plot3d(data, file=None):
 
     squish_plot(2)
     if file is not None:
-        plt.savefig(file)
+        plt.savefig(file, bbox_inches='tight', pad_inches=0, dpi=400)
     else:
         plt.show(block=False)
+    plt.cla()
+    plt.clf()
 
 
 def plot(data, file=None):
@@ -43,6 +45,8 @@ def plot(data, file=None):
     fig.set_cmap('terrain')
     plt.axis('off')
     if file is not None:
-        plt.savefig(file, bbox_inches='tight', pad_inches=0)
+        plt.savefig(file, bbox_inches='tight', pad_inches=0, dpi=400)
     else:
         plt.show(block=False)
+    plt.cla()
+    plt.clf()
